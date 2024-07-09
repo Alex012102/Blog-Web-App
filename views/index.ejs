@@ -1,0 +1,157 @@
+<%- include("partials/header.ejs") %>
+
+<!-- REDO of index.ejs. Looking for a more modern design.
+ inspiration:     https://i.pinimg.com/originals/8d/59/40/8d5940c194b230c931a3e7ce18dd2209.jpg
+-->
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+  <% if (locals.posts && locals.posts.length) { %> <% posts.forEach(post => { %>
+
+  <div class="col">
+    <div class="card" style="height: 300px">
+      <div class="card-body overflow-auto" style="max-height: 257px">
+        <h5 class="card-title"><%= post.title %></h5>
+        <p class="card-text"><%= post.body %></p>
+      </div>
+      <div class="card-footer">
+        <form action="/delete" method="POST" style="display: inline">
+          <input type="hidden" name="id" value="<%= post.id %>" />
+          <button
+            type="submit"
+            class="link-body-emphasis text-decoration-none"
+            style="border: none; background: none"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              fill="Gray"
+              class="bi bi-trash3-fill"
+              viewBox="0 0 16 16"
+            >
+              <path
+                d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5m-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5M4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06m6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528M8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5"
+              ></path>
+            </svg>
+          </button>
+        </form>
+        <a
+          href="#"
+          class="link-body-emphasis text-decoration-none edit-post"
+          data-id="<%= post.id %>"
+          data-title="<%= post.title %>"
+          data-body="<%= post.body %>"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="Gray"
+            class="bi bi-pencil-fill"
+            viewBox="0 0 16 16"
+          >
+            <path
+              d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.5.5 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11z"
+            />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+  <% }) %>
+</div>
+<% } else { %>
+<div class="blank">
+  <div class="card" style="height: fit-content; width: fit-content">
+    <div class="card-body">
+      <h5 class="card-title m-0">No Posts Found</h5>
+    </div>
+  </div>
+</div>
+<% } %>
+
+<div class="modal" id="editModal" style="display: none">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Post</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+          onclick="closeModal()"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form id="editForm" method="POST" action="/edit">
+          <input type="hidden" name="id" id="editId" />
+          <div class="mb-3">
+            <label for="editTitle" class="form-label">Title</label>
+            <input
+              type="text"
+              name="title"
+              id="editTitle"
+              class="form-control"
+            />
+          </div>
+          <div class="mb-3">
+            <label for="editBody" class="form-label">Body</label>
+            <textarea name="body" id="editBody" class="form-control"></textarea>
+          </div>
+          <div class="modal-footer pb-0">
+            <button
+              type="button"
+              onclick="closeModal()"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button type="submit" class="btn btn-primary">Save changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll(".delete-post").forEach((button) => {
+    button.addEventListener("click", function (event) {
+      event.preventDefault();
+      const postId = this.getAttribute("data-id");
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = "/delete";
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = "id";
+      input.value = postId;
+      form.appendChild(input);
+      document.body.appendChild(form);
+      form.submit();
+    });
+  });
+
+  document.querySelectorAll(".edit-post").forEach((button) => {
+    button.addEventListener("click", function (event) {
+      event.preventDefault();
+      const postId = this.getAttribute("data-id");
+      const postTitle = this.getAttribute("data-title");
+      const postBody = this.getAttribute("data-body");
+
+      document.getElementById("editId").value = postId;
+      document.getElementById("editTitle").value = postTitle;
+      document.getElementById("editBody").value = postBody;
+
+      document.getElementById("editModal").style.display = "block";
+    });
+  });
+
+  function closeModal() {
+    document.getElementById("editModal").style.display = "none";
+  }
+</script>
+
+<%- include("partials/footer.ejs") %>
